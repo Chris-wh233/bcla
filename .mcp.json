@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "bcla": {
+      "cwd": ".",
+      "command": "python3",
+      "args": ["./runtime/server.py"],
+      "env_vars": ["BCLA_HOME", "BCLA_DOCKER_BIN"],
+      "tool_timeout_sec": 120
+    }
+  }
+}

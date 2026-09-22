@@ -1,0 +1,17 @@
+{
+  "name": "bcla",
+  "version": "2.0.0",
+  "description": "Skill-led LoongArch64 container builds with a small persistent task store.",
+  "author": {"name": "Chris-wh233"},
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "BCLA",
+    "shortDescription": "Skill-led LoongArch64 container builds",
+    "longDescription": "Build and resume LoongArch64 container tasks in the current conversation. Skills guide decisions; tools persist checkpoints and execution evidence.",
+    "developerName": "Chris-wh233",
+    "category": "Developer Tools",
+    "capabilities": ["Interactive", "Write"],
+    "defaultPrompt": ["Build a LoongArch64 container image", "Resume a paused BCLA task"]
+  }
+}
