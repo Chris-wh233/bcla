@@ -9,7 +9,7 @@ These are discovery endpoints, not assertions of current artifact availability. 
 
 Search the missing component, not only the top-level project. For example, search lightningcss itself and its locked version. Inspect both Releases and the CI repository. Directory names may differ from upstream naming; inspect archive content rather than rejecting on filename alone.
 
-For `loongarch64-releases`, use the manual/local-build behavior in the main Skill. The container wrapper is `scripts/build_in_docker.sh`; inspect its real interface and expect outputs under `dists/`. An absent exact-version Release is not proof that the repository's CI cannot produce it.
+For `loongarch64-releases`, use the manual/auto behavior in the main Skill. The container wrapper is `scripts/build_in_docker.sh`; inspect its real interface and expect outputs under `dists/`. An absent exact-version Release is not proof that the repository's CI cannot produce it.
 
 ## Node.js runtime
 

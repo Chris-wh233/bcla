@@ -1,90 +1,95 @@
-# BCLA
+# BCLA (Build Container for LoongArch)
 
-LoongArch64 容器镜像构建插件。模型根据 Skills 决定构建路径，Codex Agent 负责执行循环，MCP 只提供任务持久化、容器执行和证据读取。
+BCLA 是面向原生 LoongArch64 环境的 Codex 容器镜像构建插件。它复用 Codex 当前会话和 Agent Loop，通过 Skills 提供 LoongArch64 构建经验，通过 MCP 工具保存任务状态、管理辅助容器、执行命令并记录结果。
 
-插件名和 MCP 名均为 `bcla`，默认数据目录为 `~/.local/share/bcla`。当前实现不包含 Controller 工作项、依赖状态机、Stop Hook 和硬预算。
+用户可以在同一会话中启动、暂停和恢复构建，也可以在不触发 BCLA 的普通对话中分析任务日志或讨论构建方案。
+
+## 工作方式
+
+使用 `@BCLA` 后，Codex 会根据项目和目标选择构建路线：
+
+1. 识别仓库、版本、目标镜像及用户约束。
+2. 查找可复用的构建经验、LoongArch64 产物和容器镜像。
+3. 在 LoongArch64 辅助容器中分析、构建和测试。
+4. 保存检查点、资源来源、执行记录和最终产物信息，供后续会话恢复。
+
+Skills 负责镜像选择、依赖获取、源码适配、网络配置和经验复用等决策。MCP 层只提供持久化与执行能力，不替模型选择构建路线。
 
 ## 安装
 
-要求 Linux、Python 3.10+（仅标准库）、可使用本地 Docker socket 的 Codex 进程，以及原生 LoongArch64 Docker 环境。准备辅助容器时需要包仓库网络访问。
+运行环境需要 Linux、Python 3.10+、支持插件的 Codex CLI、可访问的 Docker socket，以及原生 LoongArch64 Docker 环境。
 
-在此源码目录执行：
+在源码根目录执行：
 
 ```bash
 ./install.sh
 ```
 
-安装脚本创建独立本地 marketplace，通过当前 Codex CLI 的 `plugin marketplace add` 和 `plugin add` 安装。不删除旧插件或旧缓存。每次执行生成带版本后缀的独立包，保留以前的包以免影响已有进程。更新后开启新会话。
-
-只生成安装包而不修改 Codex 配置：
+安装或更新后开启新的 Codex 会话。只准备本地安装包时使用：
 
 ```bash
 ./install.sh --prepare-only
 ```
 
-可用 `BCLA_HOME` 指定持久化目录，用 `BCLA_DOCKER_BIN` 指定 Docker 客户端。安装脚本的 `--home` 只指定包和 marketplace 位置；运行时数据位置仍由 MCP 进程继承的 `BCLA_HOME` 决定。
+默认数据目录是 `~/.local/share/bcla`。可通过 `BCLA_HOME` 修改数据目录，通过 `BCLA_DOCKER_BIN` 指定 Docker 客户端。
 
-## 卸载
-
-使用安装时相同的用户和 `CODEX_HOME` 环境执行：
+卸载插件：
 
 ```bash
 ./uninstall.sh
 ```
 
-脚本通过 `codex plugin remove bcla@bcla-local` 卸载插件及其 Codex 安装缓存，保留本地 marketplace、安装包、任务记录、日志和知识库。卸载后开启新会话。脚本支持从任意工作目录调用，无需 Python；本操作不停止已运行的构建命令或删除辅助容器。
+卸载会保留任务记录、workspace、日志、知识库和本地安装包。
 
 ## 使用
 
+直接使用 `@BCLA` 加自然语言描述即可，不需要附加技能限定名。每个任务都有 `bcla-...` 格式的 ID。恢复、清理或生成经验时建议明确提供任务 ID。
+
 | 操作 | 示例 |
 | --- | --- |
-| 开始任务 | `@BCLA $bcla:bcla 构建 beszel 指定版本的 hub 和 agent，仅 Alpine` |
-| 提供产物恢复 | `@BCLA $bcla:bcla 恢复 bcla-...，静态资源位于 /tmp/static.zip` |
-| 查看问题 | `分析任务 bcla-... 的构建日志，暂时不要继续` |
-| 暂停任务 | `@BCLA 暂停当前构建，保存检查点` |
-| 清理辅助容器 | `@BCLA 清理任务 bcla-... 的环境`，仅停止并删除已登记且归属匹配的自建辅助容器，保留 workspace 并显示其路径 |
-| 生成经验 | `@BCLA $bcla:gen-experience 为 bcla-... 生成经验` |
-| 自动本地 CI | 首轮请求说明 `release_ci_mode=local-build`；默认 `manual` |
+| 开始任务 | `@BCLA 构建 beszel 指定版本的 hub 和 agent 镜像，仅构建 Alpine 版本` |
+| 恢复任务 | `@BCLA 恢复任务 bcla-...，所需静态资源位于 /tmp/static.zip` |
+| 暂停任务 | `@BCLA 暂停当前构建并保存检查点` |
+| 清理环境 | `@BCLA 清理任务 bcla-... 的辅助容器` |
+| 生成经验 | `@BCLA 为已完成的任务 bcla-... 生成构建经验` |
 
-知识库只在显式调用 gen-experience 时写入，默认仅在本地 main 提交。`goal.options.kb_publication=push-main` 或当前明确授权才允许推送。
+可选参数：
+本质是由 Skills 解释的任务偏好，并无强制校验
 
-## 实现边界
+| 参数 | 可选值 | 默认值 | 作用 |
+| --- | --- | --- | --- |
+| release_ci_mode | manual、auto | manual | 当 loongarch64-releases 有可用 CI、但没有所需 Release 时，选择暂停并让用户构建（manual），或在本地自动运行该 CI 的 scripts/build_in_docker.sh（auto）|
+| kb_publication | local-commit、push-main | local-commit | 生成经验后只提交到本地知识库，或明确允许推送到知识库远端 main |
 
-任务记录通过目标、检查点、决策和资源清单保存当前进度、路线依据、已验证事实及恢复位置。工具保存命令与执行结果，供模型恢复上下文。
+可在首轮请求中指定，例如：
 
-工具记录命令提交时的任务版本，在返回结果中提供当前上下文和未整理结果提示。模型可把记录更新与下一条命令一并提交；版本冲突不会启动命令。提示不阻断构建，也不能保证模型绝不会忘记整理。带有历史节点的任务仍可读取；历史节点仅作为资料读取，当前信息写入任务级检查点和资源清单。
+  @BCLA 构建项目 A 的镜像，release_ci_mode=auto
 
-- 任务状态只有 ACTIVE、WAITING_FOR_USER、PAUSED、SUCCEEDED、CANCELLED。状态是记录，不会自动调度或杀死命令。
-- SQLite 事务用于原子保存任务和事件；并发修改通过 revision 检测。没有资源父子状态门禁。
-- 命令异步执行，使用 request_key 去重，日志可分页读取。MCP 重启不代表构建中止；超时后需要检查容器内实际进程。
-- 新辅助容器挂载 Docker socket，设置较高 nofile，并由 bootstrap 工具安装 git、ca-certificates、curl、docker-cli；使用 apt 或 apk 时同时安装 ripgrep。默认不安装 Docker daemon、compose 或 buildx。
-- 工作区使用相同的宿主机/容器绝对路径，兼容通过宿主 Docker daemon 创建的兄弟容器挂载。
-- 代理通过 exec 环境注入，目标镜像不继承辅助容器配置。是否遵循镜像来源、是否应等待 x86 产物、是否完成测试由 Skills 和模型判断，工具不提供强制保证。
-- 无额外 Agent 循环或自动续跑。Codex 会话结束时，应保存检查点，用户可再次调用恢复。
+补充说明：
+如需讨论任务细节而不继续执行 BCLA，请省略 @BCLA。模型可以结合任务的记录和日志进行分析，但不会主动推进构建。例如：请给我一个简洁的 GitHub Actions 工作流，用于在 x86_64 环境中构建任务 bcla-... 所需的前端资源
+
+## 数据与边界
+
+- 项目分析、依赖安装、编译和测试在任务辅助容器中执行。workspace 位于 `~/.local/share/bcla/tasks/<task-id>/workspace`，并挂载到容器中的相同路径。
+- 辅助容器可以访问宿主 Docker socket。默认安装 git、ca-certificates、curl 和 docker-cli。（使用 apt 或 apk 的环境会额外安装 ripgrep）
+- 命令异步执行并保存日志。会话结束不会删除任务，后续可以通过任务 ID 恢复。
+- BCLA 只在用户明确要求时清理已登记且归属于该任务的辅助容器。清理不会删除 workspace、镜像或卷。
+- 知识库用于复用已经验证的构建经验。生成经验需要用户主动触发；发布或推送需要用户明确授权。
+- Skills 和模型负责技术判断。实际构建结果、镜像架构及基础功能仍需通过任务中的构建和测试证据确认。
 
 ## 文件结构
 
 ```text
-.codex-plugin/plugin.json  插件入口
-.mcp.json                  MCP 配置
-runtime/                   任务存储、容器工具、后台执行、MCP
-skills/                    8 个轻量技能及中文说明
-docs/task-protocol.md      工具和记录协议
-scripts/install.py         可重复安装和打包
-scripts/kb_index.py        经验结构/哈希检查及索引生成
-scripts/smoke_container.py 可选真实容器测试
-tests/                     存储、执行、容器参数和知识库测试
-docs/behavior-evaluation.md 模型行为验收场景（不同于单元测试）
+.codex-plugin/plugin.json   插件清单
+.mcp.json                   MCP 服务配置
+install.sh                  安装入口
+uninstall.sh                卸载入口
+runtime/                    任务存储、辅助容器和命令执行
+skills/                     BCLA 构建 Skills
+docs/                       任务协议和行为验收说明
+scripts/install.py          本地打包与安装实现
+scripts/image_tags.py       LCR 镜像标签完整分页查询
+scripts/kb_index.py         知识库校验与索引生成
+scripts/smoke_container.py  辅助容器冒烟检查
+tests/                      运行时与持久化测试
 ```
-
-## 验证
-
-```bash
-python3 -m unittest discover -s tests -v
-python3 scripts/smoke_container.py --image <已存在的LoongArch镜像>
-python3 scripts/smoke_container.py --image <已存在的LoongArch镜像> --bootstrap
-```
-
-真实容器测试只创建临时任务和辅助容器，结束后删除该临时容器，不删除镜像。单元测试不构建业务项目。通过这些测试不代表模型在所有真实任务中都能正确选择技能；仍需以实际构建案例验证。
-
-备份时同时保存数据目录中的 records.sqlite3 和 tasks/；在没有写入时复制，或使用 SQLite backup API 备份数据库。辅助容器和 Docker 镜像由 Docker 独立管理。

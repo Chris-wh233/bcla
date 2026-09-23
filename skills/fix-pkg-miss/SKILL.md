@@ -42,7 +42,7 @@ Inspect both Releases and CI in the matching `loongarch64-releases` repository. 
 Read `goal.options.release_ci_mode`, default `manual`:
 
 - `manual`: save `WAITING_FOR_USER` with CI repository, exact version, expected output and validation. Tell the user how to produce it. On return, validate the supplied artifact or record that this CI cannot produce the requested version and move to source fallback.
-- `local-build`: inspect and fetch the CI into an isolated workspace, then invoke its `scripts/build_in_docker.sh` with the expected version. The host-side wrapper is permitted solely to orchestrate container builds; inspect its paths and arguments first. It must not compile/install dependencies on the host. Validate `dists/` contents. A failed CI candidate is rejected, not repeatedly repaired.
+- `auto`: inspect and fetch the CI into an isolated workspace, then invoke its `scripts/build_in_docker.sh` with the expected version. The host-side wrapper is permitted solely to orchestrate container builds; inspect its paths and arguments first. It must not compile/install dependencies on the host. Validate `dists/` contents. A failed CI candidate is rejected, not repeatedly repaired.
 
 Do not trigger remote workflows or publish releases. CI mode is a task preference, not a code-enforced gate.
 

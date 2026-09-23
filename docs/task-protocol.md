@@ -6,7 +6,7 @@ All tools are supplied by `bcla`. They store facts or run commands and never sel
 
 ## Task selection and checkpoints
 
-Use `task_open(action=create, goal={...}, session_id=...)` to create. Include repository, requested version, target names and user constraints; resolve commit when fetched. Options may include `release_ci_mode` (manual/local-build, default manual) and `kb_publication` (local-commit/push-main, default local-commit). Omit unknown session identity rather than guessing.
+Use `task_open(action=create, goal={...}, session_id=...)` to create. Include repository, requested version, target names and user constraints; resolve commit when fetched. Options may include `release_ci_mode` (manual/auto, default manual) and `kb_publication` (local-commit/push-main, default local-commit). Omit unknown session identity rather than guessing.
 
 Use `task_open(action=get, task_id=...)` for the current record. `task_open(action=list)` uses MCP thread metadata when supplied; otherwise it returns all tasks. Never assume a listed task belongs to the current conversation without matching evidence.
 
