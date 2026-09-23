@@ -85,6 +85,8 @@ For transport errors, inspect effective HTTP/HTTPS/ALL proxy settings. If a prox
 
 ## Completion
 
+When the user explicitly requests environment cleanup, resolve the task ID and call `environment_cleanup`. Never clean automatically after success, interruption or recipe generation. This stops any workloads in the registered task-owned helpers; adopted/user containers and direct docker-run containers are outside its scope. Report per-container failures or skips accurately and always show the returned workspace path, which is preserved. Cleanup does not change task completion status. To resume after cleanup, create and bootstrap a helper under a new environment name; use a new request_key for new commands.
+
 Continue while useful work remains within the user's request. End on a real pause, cancellation, interruption or verified completion; BCLA does not force Codex to continue after a turn ends.
 
 Before recording `SUCCEEDED`, verify every requested image exists, has immutable image ID/digest and Linux LoongArch64 architecture, and passes required startup/smoke tests without helper proxy overlays. Record any allowed optional omissions. A compilation exit code alone does not prove image success.

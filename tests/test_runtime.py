@@ -123,7 +123,7 @@ class TaskTests(unittest.TestCase):
         calls = []
         def docker(*args):
             calls.append(args)
-            return info if args[:2] == ("image", "inspect") else ""
+            return info if args[:2] == ("image", "inspect") or args[0] == "inspect" else ""
         with patch.object(runtime, "docker_call", side_effect=docker), patch("runtime.subprocess.run", return_value=subprocess.CompletedProcess([], 1, "", "")):
             result = runtime.ensure(self.task_id, "main", "local:verified")
         create = next(call for call in calls if call[0] == "create")
@@ -134,6 +134,9 @@ class TaskTests(unittest.TestCase):
         self.assertIn(f"type=bind,source={self.task['workspace']},target={self.task['workspace']}", create)
         self.assertIsNone(result["adopted_container"])
         self.assertIn("docker-cli", BOOTSTRAP)
+        self.assertEqual(BOOTSTRAP.count("docker-cli ripgrep"), 2)
+        self.assertNotIn("dnf install -y git ca-certificates curl docker-cli ripgrep", BOOTSTRAP)
+        self.assertNotIn("yum install -y git ca-certificates curl docker-cli ripgrep", BOOTSTRAP)
         self.assertNotIn("docker.io", BOOTSTRAP)
         self.assertNotIn("buildx", BOOTSTRAP)
 
@@ -142,6 +145,50 @@ class TaskTests(unittest.TestCase):
         with patch.object(runtime, "docker_call", return_value=json.dumps([dict(Architecture="amd64", Os="linux")])):
             with self.assertRaisesRegex(ValueError, "LoongArch"):
                 runtime.ensure(self.task_id, "main", "wrong")
+
+    def test_cleanup_removes_owned_helper_once_and_preserves_workspace(self):
+        runtime = Runtime(self.store)
+        cid = "a" * 64
+        environment = dict(id="env-" + "c" * 32, container="helper", container_id=cid,
+                           image_id="sha256:image", adopted_container=None)
+        self.store.put_record("environments", self.task_id, environment)
+        marker = Path(self.task["workspace"]) / "keep.txt"
+        marker.write_text("retained")
+        def docker(*args):
+            if args[0] == "ps":
+                return cid
+            if args[0] == "inspect":
+                return json.dumps([dict(Id=cid, Image="sha256:image",
+                                        Config={"Labels": {"bcla.task": self.task_id}})])
+            return ""
+        with patch.object(runtime, "docker_call", side_effect=docker) as call:
+            result = runtime.cleanup(self.task_id)
+            self.assertEqual(result["environments"][0]["status"], "removed")
+            call.assert_any_call("stop", "--time", "10", cid)
+            call.assert_any_call("rm", cid)
+            call.reset_mock()
+            self.assertEqual(runtime.cleanup(self.task_id)["environments"][0]["status"], "already_cleaned")
+            call.assert_not_called()
+        self.assertEqual(marker.read_text(), "retained")
+        self.assertEqual(result["workspace"], self.task["workspace"])
+        self.assertEqual(self.store.get(self.task_id)["status"], "ACTIVE")
+
+    def test_cleanup_refuses_mismatched_ownership_and_skips_adopted(self):
+        runtime = Runtime(self.store)
+        cid = "b" * 64
+        for suffix, adopted in [("d", None), ("e", "user-helper")]:
+            self.store.put_record("environments", self.task_id,
+                                  dict(id="env-" + suffix * 32, container="helper", container_id=cid,
+                                       image_id="sha256:image", adopted_container=adopted))
+        def docker(*args):
+            if args[0] == "ps":
+                return cid
+            if args[0] == "inspect":
+                return json.dumps([dict(Id=cid, Image="sha256:image", Config={"Labels": {"bcla.task": "another-task"}})])
+            self.fail("Unexpected destructive Docker call")
+        with patch.object(runtime, "docker_call", side_effect=docker):
+            result = runtime.cleanup(self.task_id)
+        self.assertEqual({e["status"] for e in result["environments"]}, {"failed", "skipped_external"})
 
     def test_mcp_initialization_and_errors(self):
         server = Server(self.store)

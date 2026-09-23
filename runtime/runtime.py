@@ -21,9 +21,9 @@ BOOTSTRAP = """set -eu
 if command -v apt-get >/dev/null; then
   export DEBIAN_FRONTEND=noninteractive
   apt-get update
-  apt-get install -y --no-install-recommends git ca-certificates curl docker-cli
+  apt-get install -y --no-install-recommends git ca-certificates curl docker-cli ripgrep
 elif command -v apk >/dev/null; then
-  apk add --no-cache git ca-certificates curl docker-cli
+  apk add --no-cache git ca-certificates curl docker-cli ripgrep
 elif command -v dnf >/dev/null; then
   dnf install -y git ca-certificates curl docker-cli
 elif command -v yum >/dev/null; then
@@ -116,6 +116,8 @@ class Runtime:
                              or existing.get("adopted_container") != container):
                 raise ValueError("Name already identifies a different environment; choose a new name")
             if existing:
+                if existing.get("cleaned_at"):
+                    raise ValueError("Environment was cleaned; use a new environment name and bootstrap it")
                 info = json.loads(self.docker_call("inspect", existing["container"]))[0]
                 if not info["State"]["Running"]:
                     self.docker_call("start", existing["container"])
@@ -154,7 +156,59 @@ class Runtime:
                                adopted_container=adopted_container,
                                created_at=now(), workspace=task["workspace"])
             self.store.put_record("environments", task_id, environment)
+            info = json.loads(self.docker_call("inspect", container))[0]
+            environment["container_id"] = info["Id"]
+            self.store.put_record("environments", task_id, environment)
             return environment
+
+    def cleanup(self, task_id):
+        """Remove only registered task-owned helpers; leave task files intact."""
+        task = self.store.get(task_id)
+        results = []
+        with self.lock(task_id):
+            for environment in self.store.records("environments", task_id):
+                item = dict(environment_id=environment["id"], container=environment["container"])
+                results.append(item)
+                if environment.get("adopted_container"):
+                    item["status"] = "skipped_external"
+                    continue
+                if environment.get("cleaned_at"):
+                    item["status"] = "already_cleaned"
+                    continue
+                try:
+                    # Inventory lookup distinguishes absence from daemon/inspect failure.
+                    ids = self.docker_call("ps", "-aq", "--no-trunc").split()
+                    recorded_id = environment.get("container_id")
+                    if recorded_id and recorded_id not in ids:
+                        item["status"] = "already_absent"
+                    else:
+                        if not recorded_id:
+                            matches = self.docker_call("ps", "-aq", "--no-trunc", "--filter",
+                                                       "name=^/" + re.escape(environment["container"]) + "$").split()
+                            if not matches:
+                                item["status"] = "already_absent"
+                            elif len(matches) != 1:
+                                raise ValueError("Ambiguous legacy container identity")
+                            else:
+                                recorded_id = matches[0]
+                        if recorded_id:
+                            info = json.loads(self.docker_call("inspect", recorded_id))[0]
+                            if (info["Id"] != recorded_id or
+                                    info.get("Config", {}).get("Labels", {}).get("bcla.task") != task_id or
+                                    info["Image"] != environment["image_id"]):
+                                raise ValueError("Container ownership does not match environment record")
+                            environment["container_id"] = recorded_id
+                            self.store.put_record("environments", task_id, environment)
+                            self.docker_call("stop", "--time", "10", recorded_id)
+                            self.docker_call("rm", recorded_id)
+                            item.update(status="removed", container_id=recorded_id)
+                    environment["cleaned_at"] = now()
+                    environment["cleanup_status"] = item["status"]
+                    self.store.put_record("environments", task_id, environment)
+                except (ValueError, OSError, subprocess.SubprocessError, KeyError) as error:
+                    item.update(status="failed", error=str(error))
+        return dict(task_id=task_id, workspace=task["workspace"], workspace_preserved=True,
+                    environments=results)
 
     def execute(self, task_id, environment_id, command, request_key, cwd=None,
                 variables=None, direct=False, timeout_seconds=3600, checkpoint=None):

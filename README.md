@@ -24,6 +24,16 @@ LoongArch64 容器镜像构建插件。模型根据 Skills 决定构建路径，
 
 可用 `BCLA_HOME` 指定持久化目录，用 `BCLA_DOCKER_BIN` 指定 Docker 客户端。安装脚本的 `--home` 只指定包和 marketplace 位置；运行时数据位置仍由 MCP 进程继承的 `BCLA_HOME` 决定。
 
+## 卸载
+
+使用安装时相同的用户和 `CODEX_HOME` 环境执行：
+
+```bash
+./uninstall.sh
+```
+
+脚本通过 `codex plugin remove bcla@bcla-local` 卸载插件及其 Codex 安装缓存，保留本地 marketplace、安装包、任务记录、日志和知识库。卸载后开启新会话。脚本支持从任意工作目录调用，无需 Python；本操作不停止已运行的构建命令或删除辅助容器。
+
 ## 使用
 
 | 操作 | 示例 |
@@ -32,6 +42,7 @@ LoongArch64 容器镜像构建插件。模型根据 Skills 决定构建路径，
 | 提供产物恢复 | `@BCLA $bcla:bcla 恢复 bcla-...，静态资源位于 /tmp/static.zip` |
 | 查看问题 | `分析任务 bcla-... 的构建日志，暂时不要继续` |
 | 暂停任务 | `@BCLA 暂停当前构建，保存检查点` |
+| 清理辅助容器 | `@BCLA 清理任务 bcla-... 的环境`，仅停止并删除已登记且归属匹配的自建辅助容器，保留 workspace 并显示其路径 |
 | 生成经验 | `@BCLA $bcla:gen-experience 为 bcla-... 生成经验` |
 | 自动本地 CI | 首轮请求说明 `release_ci_mode=local-build`；默认 `manual` |
 
@@ -46,7 +57,7 @@ LoongArch64 容器镜像构建插件。模型根据 Skills 决定构建路径，
 - 任务状态只有 ACTIVE、WAITING_FOR_USER、PAUSED、SUCCEEDED、CANCELLED。状态是记录，不会自动调度或杀死命令。
 - SQLite 事务用于原子保存任务和事件；并发修改通过 revision 检测。没有资源父子状态门禁。
 - 命令异步执行，使用 request_key 去重，日志可分页读取。MCP 重启不代表构建中止；超时后需要检查容器内实际进程。
-- 新辅助容器挂载 Docker socket，设置较高 nofile，并由 bootstrap 工具安装 git、ca-certificates、curl、docker-cli。默认不安装 Docker daemon、compose 或 buildx。
+- 新辅助容器挂载 Docker socket，设置较高 nofile，并由 bootstrap 工具安装 git、ca-certificates、curl、docker-cli；使用 apt 或 apk 时同时安装 ripgrep。默认不安装 Docker daemon、compose 或 buildx。
 - 工作区使用相同的宿主机/容器绝对路径，兼容通过宿主 Docker daemon 创建的兄弟容器挂载。
 - 代理通过 exec 环境注入，目标镜像不继承辅助容器配置。是否遵循镜像来源、是否应等待 x86 产物、是否完成测试由 Skills 和模型判断，工具不提供强制保证。
 - 无额外 Agent 循环或自动续跑。Codex 会话结束时，应保存检查点，用户可再次调用恢复。

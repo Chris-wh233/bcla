@@ -1,5 +1,7 @@
 # BCLA task protocol
 
+`environment_cleanup(task_id)` is an explicit-user-request operation. The existing environments table is the cleanup inventory: newly ensured containers store their full container_id. The tool excludes adopted containers, checks the task label and image identity, stops/removes helpers by ID, and records cleaned_at/cleanup_status. Legacy records without IDs are resolved by exact name and verified before removal. Missing containers are treated as already absent; failures are reported per environment. No workspace, image or volume deletion is performed. The response includes workspace and workspace_preserved. Repeated cleanup is supported. Cleaned environments require a new name and bootstrap on resume.
+
 All tools are supplied by `bcla`. They store facts or run commands and never select the next Skill. The model owns technical judgments and success verification.
 
 ## Task selection and checkpoints

@@ -21,6 +21,8 @@ TASK = {"task_id": STRING}
 
 
 TOOLS = [
+    ("environment_cleanup", "Only on explicit user request: stop and remove registered task-owned helper containers. Excludes adopted containers. Preserves workspace, images and volumes; returns per-container results and workspace path. Does not change task status.",
+     schema(TASK, ["task_id"])),
     ("task_open", "Create, read, or list BCLA tasks. Never selects a task automatically.",
      schema(dict(action={"enum": ["create", "get", "list"]}, task_id=STRING, goal=OBJECT, session_id=STRING), ["action"])),
     ("task_checkpoint", "Save decisions with revision checking. execution_reviews maps finished execution IDs to interpretations. Other fields replace. No route or child-resource gate.",
@@ -35,7 +37,7 @@ TOOLS = [
      schema(dict(**TASK, image=STRING, request_key=STRING, checkpoint=OBJECT), ["task_id", "image", "request_key"])),
     ("environment_ensure", "Create/reuse a helper from a locally available LoongArch image. Mounts workspace and Docker socket, sets high nofile. Then call environment_bootstrap for new helpers. variables are transient exec overlays; never supply secrets.",
      schema(dict(**TASK, name=STRING, image=STRING, variables=OBJECT, container=STRING), ["task_id", "name", "image"])),
-    ("environment_bootstrap", "Asynchronously install git, ca-certificates, curl, docker-cli only. Poll exit status before use. No daemon/buildx/compose packages.",
+    ("environment_bootstrap", "Asynchronously install git, ca-certificates, curl and docker-cli; apt/apk helpers also receive ripgrep. Poll exit status before use. No daemon/buildx/compose packages.",
      schema(dict(**TASK, environment_id=STRING, request_key=STRING, direct=BOOLEAN), ["task_id", "environment_id", "request_key"])),
     ("environment_exec", "Run asynchronously with the task revision recorded. Optional checkpoint {expected_revision,changes,note} commits before launch. Reuse request_key to recover, new key to retry. No phase gates.",
      schema(dict(**TASK, environment_id=STRING, command=STRING, request_key=STRING, cwd=STRING,
@@ -109,7 +111,8 @@ class Server:
             if hashlib.sha256(content).hexdigest() != args["sha256"]:
                 raise ValueError("Accepted file hash mismatch")
             return {"content": content.decode(), "sha256": args["sha256"]}
-        methods = {"image_pull": self.runtime.pull, "environment_ensure": self.runtime.ensure,
+        methods = {"environment_cleanup": self.runtime.cleanup,
+                   "image_pull": self.runtime.pull, "environment_ensure": self.runtime.ensure,
                    "environment_bootstrap": self.runtime.bootstrap, "environment_exec": self.runtime.execute,
                    "execution_read": self.runtime.poll}
         result = methods[name](**args)
