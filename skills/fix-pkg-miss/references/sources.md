@@ -11,6 +11,10 @@ Search the missing component, not only the top-level project. For example, searc
 
 For `loongarch64-releases`, use the manual/auto behavior in the main Skill. The container wrapper is `scripts/build_in_docker.sh`; inspect its real interface and expect outputs under `dists/`. An absent exact-version Release is not proof that the repository's CI cannot produce it.
 
+## LuaJIT 2.1
+
+For a LoongArch64 LuaJIT 2.1 requirement, use `https://github.com/loongson/luajit2.git` branch `v2.1-agentzh-loongarch64`. This is the configured LoongArch adaptation source; do not replace it with the generic upstream LuaJIT 2.1 branch. Resolve and record the exact commit used, preserve the repository and branch as provenance, and validate the resulting library or executable in its real consumer. A compatible prebuilt artifact may still be reused after verifying that it provides the required LuaJIT 2.1 ABI and behavior.
+
 ## Node.js runtime
 
 Check `https://unofficial-builds.nodejs.org/download/release/` for the exact version's Linux `loong64` archive. Do not assume every version or libc is supported. This source addresses Node itself; npm native modules still require their own general-source search above. Keep versions within project constraints and identify unofficial provenance accurately.

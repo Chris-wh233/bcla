@@ -11,6 +11,8 @@ Read [the task protocol](../../docs/task-protocol.md) for recording and resumpti
 
 Before proposing source construction, read [source references](references/sources.md) and perform the applicable searches below. A KB miss, native-code classification, an upstream-only search or confidence that compilation is easy is not evidence that these sources lack a usable artifact. An existing source-build recipe supplies implementation guidance, not current availability evidence.
 
+LuaJIT 2.1 on LoongArch64 is a configured special case. Apply the dedicated LuaJIT source rule in [source references](references/sources.md); do not substitute the generic upstream LuaJIT 2.1 source.
+
 ## Identify and search
 
 Record the exact component/version, consumer, missing evidence, artifact format, architecture and libc/ABI. Distinguish native executables/libraries from architecture-independent data, static frontend files and pure Java archives. Inspect payloads before claiming independence.
