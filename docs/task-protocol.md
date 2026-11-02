@@ -10,6 +10,8 @@ Use `task_open(action=create, goal={...}, session_id=...)` to create. Include re
 
 Use `task_open(action=get, task_id=...)` for the current record. `task_open(action=list)` uses MCP thread metadata when supplied; otherwise it returns all tasks. Never assume a listed task belongs to the current conversation without matching evidence.
 
+For `gen-maker` export only, an explicit task ID takes precedence; otherwise select the current conversation's most recently created task after confirming session ownership. Listing order is creation order (newest first), not last-update order. Do not substitute the newest global or newest successful task. Require the selected task to be SUCCEEDED with consistent evidence; exporting does not change task status. File assembly and static checks may run on the host outside the original workspace; actual builds/tests retain the helper-container rule.
+
 `task_checkpoint(task_id, expected_revision, changes, note)` is an atomic compare-and-save. Top-level fields replace previous values, except `execution_reviews` merges named reviews. Arrays replace previous values, not append. Reread and merge after REVISION_CONFLICT; do not blindly replay stale arrays.
 
 Writable fields:

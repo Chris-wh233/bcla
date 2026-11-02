@@ -13,6 +13,8 @@ Read [the task protocol](../../docs/task-protocol.md) before creating or resumin
 
 Activate task execution only when explicitly requested. Ordinary conversation may read and discuss logs without continuing builds.
 
+For a request to export a completed build as a standalone Makefile/Dockerfile project, read [gen-maker](../gen-maker/SKILL.md) and follow its export-only workflow before entering the build/resume steps below. Its default is the current conversation's most recently created task; that selection rule applies only to this export. Exporting does not resume the build, change task status or generate knowledge-base experience.
+
 1. Read the selected task or list tasks for the actual session identity when available. Do not fabricate a thread ID. If multiple tasks could match, ask for the task ID; never silently select the newest global task.
 2. For a new task, establish canonical repository, requested revision, target images/variants, user constraints and supplied Dockerfile/environment. Resolve ambiguity before costly work; persist with `task_open(action=create)`.
 3. For a waiting task, read its wait contract first. Check that the user's supplied path exists and meets version, format, completeness and architecture requirements. A statement that an artifact exists is insufficient. Missing paths or invalid inputs leave the task waiting. Copy validated inputs into the task workspace; never clear the wait just because the user said "continue".
@@ -42,6 +44,7 @@ These essentials apply even before a specialist Skill is loaded: reuse existing 
 | Required non-image artifact not yet validated/available, including the project's own binary | `fix-pkg-miss` and its source references, before source-route selection |
 | Project-owned tracked source/build change | `building-first` |
 | User requests recipe after verified completion | `gen-experience` |
+| User requests a standalone Makefile/Dockerfile project after verified completion | `gen-maker` |
 
 Skills are instructions to read and apply, not automatically invoked functions. Do not assume mentioning a Skill ran its search procedure. Reapply the same routing to dependencies discovered inside other dependencies. Optional proxy Skills remain optional.
 

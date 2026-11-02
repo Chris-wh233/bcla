@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gen Maker"
+  short_description: "Generate flat Docker build projects from BCLA task evidence"
+  default_prompt: "Use $bcla:gen-maker to export the current conversation's most recently created BCLA task into a flat Dockerfile/Makefile project, after verifying it succeeded."
