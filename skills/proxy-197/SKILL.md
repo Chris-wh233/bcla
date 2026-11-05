@@ -13,10 +13,10 @@ Before `environment_ensure`, provide these `variables` for task-owned helper con
 {
   "http_proxy": "http://10.2.10.197:7890",
   "https_proxy": "http://10.2.10.197:7890",
-  "no_proxy": "localhost,127.0.0.1,cloud.loongnix.cn",
+  "no_proxy": "localhost,127.0.0.1,pkg.loongnix.cn,cloud.loongnix.cn,dl-cdn.openeuler.openatom.cn",
   "HTTP_PROXY": "http://10.2.10.197:7890",
   "HTTPS_PROXY": "http://10.2.10.197:7890",
-  "NO_PROXY": "localhost,127.0.0.1,cloud.loongnix.cn"
+  "NO_PROXY": "localhost,127.0.0.1,pkg.loongnix.cn,cloud.loongnix.cn,dl-cdn.openeuler.openatom.cn"
 }
 ```
 
