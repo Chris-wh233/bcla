@@ -53,6 +53,7 @@ These are situational routing rules, not Controller phases. The acquisition-befo
 - Before broad source analysis: use `use-experience` once identity and targets are known.
 - Before project commands: use `get-container-image` to obtain a compatible helper. All project analysis, fetching, modifications, generation, compilation and tests run inside helpers. Host operations may handle task files, KB metadata, Docker lifecycle and input transfer.
 - Find the official Dockerfile, including official cross-repository references, or use the user-supplied source. Record URL/repository, commit, path and exact original bytes. If no authoritative source can be established, ask the user and wait. Never invent a replacement Dockerfile.
+- When adapting or finalizing a Dockerfile, apply [Dockerfile guidelines](../../docs/dockerfile-guidelines.md): preserve upstream stages and layout while allowing verified prebuilt resources to replace compilation inside the same stage.
 - Inspect all final-image inputs, including project distribution archives and generated frontend files. Absence triggers `fix-pkg-miss` before automatically choosing source construction.
 - When a project involves LuaJIT 2.1, whether missing, bundled, or downloaded/compiled by existing build scripts, first read the [LuaJIT source rule](../fix-pkg-miss/references/sources.md#luajit-21) before choosing its acquisition or adaptation route. This applies even without a missing-package error.
 - When failure belongs to tracked project source/build logic, use `building-first`. A verified FROM mapping may be applied before a failing build; do not deliberately run a known wrong-architecture base.
@@ -93,7 +94,7 @@ When the user explicitly requests environment cleanup, resolve the task ID and c
 
 Continue while useful work remains within the user's request. End on a real pause, cancellation, interruption or verified completion; BCLA does not force Codex to continue after a turn ends.
 
-Before recording `SUCCEEDED`, verify every requested image exists, has immutable image ID/digest and Linux LoongArch64 architecture, and passes required startup/smoke tests without helper proxy overlays. Record any allowed optional omissions. A compilation exit code alone does not prove image success.
+Before recording `SUCCEEDED`, compare the final Dockerfile with its recorded baseline using [Dockerfile guidelines](../../docs/dockerfile-guidelines.md). Complete cleanup before the final build/test; a later reformatted file is not covered by an earlier build. Verify every requested image exists, has immutable image ID/digest and Linux LoongArch64 architecture, and passes required startup/smoke tests without helper proxy overlays. Record any allowed optional omissions. A compilation exit code alone does not prove image success.
 
 Save final Dockerfiles and retained patches with `task_file(action=save)` before writing the result. Reference successful execution IDs, input provenance, image identities and test evidence. Do not freeze the task against later factual corrections. The store records the model's status; it does not certify success.
 

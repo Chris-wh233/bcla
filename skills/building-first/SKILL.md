@@ -18,6 +18,8 @@ Missing external non-image resources belong to `fix-pkg-miss`. Missing base/help
 
 Dockerfile adaptation requires an actual official or user-supplied source, recorded with repository/URL, commit and path. Modify that file or a clearly derived copy. Never synthesize a new replacement to avoid finding the official file. Reinspect FROM and required inputs after changes; no tool permissions or work-item reset are needed.
 
+Read [Dockerfile guidelines](../../docs/dockerfile-guidelines.md) for Dockerfile changes. Preserve upstream stage structure and formatting. A verified prebuilt artifact may replace compilation inside the existing stage; preserve its output interface and remove obsolete compile-only inputs. Record evidence for necessary larger changes. Build/test the exact final Dockerfile after cleanup and before accepting it.
+
 Disable an optional component only when it is outside the user's requirements, demonstrably optional, and omission preserves basic functionality. Record the omission and its test evidence in the final result and experience.
 
 When equivalent errors repeat, patches are repeatedly reverted, or new dependencies/unrelated adaptations accumulate, reassess. Change route only with a concrete simpler alternative satisfying the same targets. If no viable small adaptation remains, pause with reasons and the artifact/input that would permit continuation. Do not persist because of sunk effort.

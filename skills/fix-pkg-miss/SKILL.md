@@ -29,6 +29,8 @@ Search in this order, recording URLs, results and why an inapplicable source was
 
 Stop searching when a candidate is validated for the real consumer; do not exhaust lower-priority sources needlessly. Before source fallback, account for each applicable preceding source and CI, distinguishing checked-and-absent, verified-incompatible, not-applicable and unreachable. Do not label an unqueried source absent. Persist the acquisition conclusion and cite execution or lookup evidence before compilation; the existing checkpoint is sufficient, without graph construction or a new registration tool.
 
+Record whether each accepted output was downloaded, installed as a package, built inside a Dockerfile stage, built separately during the task, or supplied after external generation. Keep exact remote URLs/package identity or producing execution and consumer paths in existing resources. For Dockerfile changes, apply [Dockerfile guidelines](../../docs/dockerfile-guidelines.md): verified prebuilt outputs may replace compilation inside an existing stage without discarding that stage. This provenance also determines gen-maker download versus COPY behavior; a local cache path does not change a downloaded artifact's origin.
+
 A fetch timeout is not "no matching release". Apply the main Skill's one-shot direct retry before recording a network blocker. Do not silently skip a required source and build from source. A source archive is not a prebuilt distribution package.
 
 Validate candidate identity, version, format, architecture/libc, contents, provenance and real-consumer behavior. Verify published checksums/signatures when supplied; their absence alone is not a reason to reject. A locally computed hash identifies bytes, not publisher authentication.
