@@ -11,6 +11,19 @@ import subprocess
 import tempfile
 
 
+def copy_plugin(source, destination):
+    source = Path(source).resolve()
+    ignored = shutil.ignore_patterns(".git", "__pycache__", "*.pyc", ".venv", "*.swp")
+
+    def exclude(directory, names):
+        result = set(ignored(directory, names))
+        if Path(directory).resolve() == source:
+            result.update({"remote", "dist"})
+        return result
+
+    return shutil.copytree(source, destination, dirs_exist_ok=True, ignore=exclude)
+
+
 def prepare(source, home):
     source, home = Path(source).resolve(), Path(home).expanduser().resolve()
     if home.is_relative_to(source):
@@ -18,8 +31,7 @@ def prepare(source, home):
     packages = home / "packages"
     packages.mkdir(parents=True, exist_ok=True)
     package = Path(tempfile.mkdtemp(prefix="bcla-", dir=packages))
-    shutil.copytree(source, package, dirs_exist_ok=True,
-                    ignore=shutil.ignore_patterns(".git", "__pycache__", "*.pyc", ".venv", "*.swp"))
+    copy_plugin(source, package)
     manifest_path = package / ".codex-plugin" / "plugin.json"
     manifest = json.loads(manifest_path.read_text())
     manifest["version"] = manifest["version"].split("+")[0] + "+codex." + datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d%H%M%S%f")

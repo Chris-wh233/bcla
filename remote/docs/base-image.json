@@ -1,0 +1,9 @@
+{
+  "checked_at": "2026-11-20",
+  "method": "docker manifest inspect --verbose lcr.loongnix.cn/library/debian:forky (metadata only; no pull/build)",
+  "reference": "lcr.loongnix.cn/library/debian:forky",
+  "digest": "sha256:f5ef929388a56fb070c8c86cd572e70b0241f13a227c624c36260ef067f43d2b",
+  "config_digest": "sha256:dca82dbba33d3cb7973ec5986793e834ff21abbd693126e304425e384af6a62a",
+  "platform": {"os": "linux", "architecture": "loong64"},
+  "validation_scope": "Manifest platform and digest verified. Package installation, actual tool versions and container startup await remote build/test."
+}

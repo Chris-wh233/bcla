@@ -233,6 +233,8 @@ class PackagingTests(unittest.TestCase):
             self.assertTrue((first / "runtime" / "server.py").is_file())
             self.assertEqual((marketplace / "plugins" / "bcla").resolve(), second)
             self.assertFalse((second / "hooks").exists())
+            self.assertFalse((second / "remote").exists())
+            self.assertFalse((second / "dist").exists())
             manifest = json.loads((second / ".codex-plugin" / "plugin.json").read_text())
             self.assertEqual(manifest["name"], "bcla")
             metadata = json.loads((marketplace / ".agents" / "plugins" / "marketplace.json").read_text())
