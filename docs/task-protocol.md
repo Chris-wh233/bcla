@@ -64,6 +64,8 @@ Use task_file(action=save, name, content) for exact UTF-8 final Dockerfiles, pat
 
 Before success, capture files actually used by the successful build, not a reconstructed approximation. Verify hashes against container workspace content when copying text. Record successful commands, test evidence and image IDs. gen-experience uses these facts and refuses to invent absent evidence.
 
+Record each final target's effective runtime base reference, known digest, family and libc in existing result/image evidence, resolving build-argument overrides and stage inheritance. Helper/builder identity is separate. These facts support schema 3 knowledge recipes under project/version/runtime-family; see [knowledge layout](knowledge-layout.md). They add no runtime state or gate, and do not automatically migrate existing knowledge.
+
 Temporary generator changes must be saved before restoration if their outputs are accepted. Reference exact patch/config, producing execution, input commit and artifact in resources; include accepted file and execution references in the final result. A later clean checkout is not reproduction evidence. Before clearing waiting, validate the actual supplied artifact and save that evidence in resources, then return to its consumer. Persistence only checks record structure; these technical judgments belong to the model and Skills.
 
 Data live at BCLA_HOME (default ~/.local/share/bcla). records.sqlite3 transactionally stores tasks/events/environments/executions; tasks/<id>/ contains workspace, accepted files, logs and a runtime lock. SQLite is an implementation detail for atomic persistence; it contains no work-item scheduler or dependency state machine. Retain the database and task directories together for backup.

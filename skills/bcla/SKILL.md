@@ -50,7 +50,7 @@ Skills are instructions to read and apply, not automatically invoked functions. 
 
 These are situational routing rules, not Controller phases. The acquisition-before-construction rule above is not optional when its trigger applies:
 
-- Before broad source analysis: use `use-experience` once identity and targets are known.
+- Before broad source analysis: use `use-experience` once identity and targets are known. Pass final-image family/libc constraints separately from helper-container choices; compatible knowledge is organized by project/version/runtime family. Record actual final runtime bases from successful build arguments and image evidence for later experience generation.
 - Before project commands: use `get-container-image` to obtain a compatible helper. All project analysis, fetching, modifications, generation, compilation and tests run inside helpers. Host operations may handle task files, KB metadata, Docker lifecycle and input transfer.
 - Find the official Dockerfile, including official cross-repository references, or use the user-supplied source. Record URL/repository, commit, path and exact original bytes. If no authoritative source can be established, ask the user and wait. Never invent a replacement Dockerfile.
 - When adapting or finalizing a Dockerfile, apply [Dockerfile guidelines](../../docs/dockerfile-guidelines.md): preserve upstream stages and layout while allowing verified prebuilt resources to replace compilation inside the same stage.

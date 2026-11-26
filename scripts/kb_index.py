@@ -6,8 +6,45 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import tempfile
 from urllib.parse import urlparse
+
+
+def version_directory(version):
+    if not isinstance(version, str) or not version:
+        raise ValueError("Missing version")
+    name = re.sub(r"[^A-Za-z0-9._-]", "_", version)
+    if name in {".", ".."}:
+        raise ValueError("Invalid version directory")
+    return name
+
+
+def repository_directory(repository):
+    url = urlparse(repository)
+    parts = url.path.strip("/").removesuffix(".git").split("/")
+    if (url.scheme != "https" or not url.hostname or url.username or url.password
+            or url.query or url.fragment or url.port
+            or len(parts) < 2 or any(not re.fullmatch(r"[A-Za-z0-9_.-]+", p)
+                                   or p in {".", ".."} for p in parts)):
+        raise ValueError("Invalid canonical HTTPS repository")
+    return Path(*([] if url.hostname == "github.com" else [url.hostname]), *parts)
+
+
+def recipe_directory(root, path, recipe):
+    """Schema 3 image paths are rooted in repository identity, not file depth."""
+    if recipe.get("schema_version") != 3 or recipe.get("producer") != "bcla":
+        return path.parent.parent
+    if recipe["kind"] == "dependency":
+        parent = path.parents[2] / "experience.json"
+        if path.parent.parent.name != "dependencies" or not parent.is_file():
+            raise ValueError("Dependency recipes must be flat under an image variant's dependencies directory")
+        return None
+    project = root / repository_directory(recipe["repository"])
+    expected = project / version_directory(recipe["requested_version"]) / recipe["variant"] / "experience.json"
+    if path != expected:
+        raise ValueError("Recipe directory does not match repository/version/variant")
+    return project
 
 
 def atomic_json(path, value):
@@ -28,6 +65,8 @@ def atomic_json(path, value):
 
 
 def validate(path, recipe):
+    if not isinstance(recipe, dict):
+        raise ValueError("Recipe must be an object")
     url = urlparse(recipe.get("repository", ""))
     if not url.hostname or len(url.path.strip("/").split("/")) < 2:
         raise ValueError("Missing canonical repository identity")
@@ -35,8 +74,9 @@ def validate(path, recipe):
         raise ValueError("Missing version or verified status")
     if recipe.get("producer") != "bcla":
         return "historical_metadata_only"
-    if recipe.get("schema_version") != 2 or not recipe.get("resolved_commit"):
+    if recipe.get("schema_version") not in {2, 3} or not recipe.get("resolved_commit"):
         raise ValueError("Missing revision/schema")
+    version_directory(recipe["requested_version"])
     for key in ("targets", "build", "tests", "files"):
         if not isinstance(recipe.get(key), list) or not recipe[key]:
             raise ValueError(f"Missing {key}")
@@ -56,6 +96,10 @@ def validate(path, recipe):
             raise ValueError(f"Hash mismatch: {relative}")
         files[entry["path"]] = file
     if recipe.get("kind") == "image":
+        if recipe["schema_version"] == 3:
+            variant = recipe.get("variant")
+            if not isinstance(variant, str) or not re.fullmatch(r"[a-z][a-z0-9-]*", variant):
+                raise ValueError("Missing or invalid image variant")
         images = recipe.get("images", [])
         covered = set()
         for image in images:
@@ -63,8 +107,18 @@ def validate(path, recipe):
                     or image.get("dockerfile") not in files or not image.get("source")):
                 raise ValueError("Incomplete image evidence")
             covered.add(image["target"])
+            if recipe["schema_version"] == 3:
+                base = image.get("runtime_base")
+                if (not isinstance(base, dict) or base.get("family") != variant
+                        or not isinstance(base.get("reference"), str) or not base["reference"].strip()
+                        or not isinstance(base.get("libc"), str) or not base["libc"].strip()):
+                    raise ValueError("Runtime base must identify variant family, exact reference and libc")
         if not set(recipe["targets"]).issubset(covered):
             raise ValueError("Image targets not covered")
+        if recipe["schema_version"] == 3 and (set(recipe["targets"]) != covered
+                                             or len(covered) != len(images)
+                                             or len(set(recipe["targets"])) != len(recipe["targets"])):
+            raise ValueError("Variant targets must exactly match unique image targets")
     elif recipe.get("kind") == "dependency":
         if not recipe.get("artifacts"):
             raise ValueError("Missing dependency artifacts")
@@ -77,7 +131,7 @@ def rebuild(root, check=False):
     root = Path(root).resolve()
     if not root.is_dir():
         raise ValueError("Knowledge checkout does not exist")
-    projects, warnings = {}, []
+    projects, warnings, identities = {}, [], set()
     errors = []
     for path in sorted(root.rglob("experience.json")):
         if not path.resolve().is_relative_to(root):
@@ -89,11 +143,19 @@ def rebuild(root, check=False):
         try:
             recipe = json.loads(path.read_text())
             validation = validate(path, recipe)
-            if "dependencies" in path.relative_to(root).parts:
+            project_directory = recipe_directory(root, path, recipe)
+            if recipe.get("kind") == "dependency":
                 continue
-            entry = dict(version=recipe["requested_version"], path=path.parent.name,
+            identity = (recipe["repository"].rstrip("/").removesuffix(".git"),
+                        recipe["requested_version"], recipe.get("variant"))
+            if identity in identities:
+                raise ValueError("Duplicate repository/version/variant identity")
+            identities.add(identity)
+            entry = dict(version=recipe["requested_version"], path=path.parent.relative_to(project_directory).as_posix(),
                          status=recipe["status"], targets=recipe.get("targets", []), validation=validation)
-            project = projects.setdefault(path.parent.parent, dict(schema_version=2, repository=recipe["repository"], experiences=[]))
+            if recipe.get("variant") is not None:
+                entry["variant"] = recipe["variant"]
+            project = projects.setdefault(project_directory, dict(schema_version=3, repository=recipe["repository"], experiences=[]))
             if project["repository"].rstrip("/").removesuffix(".git") != recipe["repository"].rstrip("/").removesuffix(".git"):
                 raise ValueError("Conflicting repositories in one project directory")
             project["experiences"].append(entry)
@@ -108,7 +170,7 @@ def rebuild(root, check=False):
     if not check:
         for directory, project in projects.items():
             atomic_json(directory / "index.json", project)
-        atomic_json(root / "index.json", dict(schema_version=2, projects=[
+        atomic_json(root / "index.json", dict(schema_version=3, projects=[
             dict(repository=project["repository"], path=str(directory.relative_to(root)))
             for directory, project in projects.items()]))
     return dict(projects=len(projects), warnings=warnings, checked_only=check)
