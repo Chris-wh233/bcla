@@ -60,9 +60,9 @@ Project analysis, installs, edits, builds and tests use helper execution. Host o
 
 task_read returns events (after is an event sequence number), environments or execution summaries (after is an offset; use next_offset). limit defaults to 50 records. execution_read returns log slices. These read tools are available during ordinary non-BCLA conversation too.
 
-Use task_file(action=save, name, content) for exact UTF-8 final Dockerfiles, patches or small reports (up to 2 MB). It returns an immutable hash/path reference. Keep binaries and large assets in the workspace or explicit artifact storage and record their hash/path separately. Read saved content using task_file(action=read, name, sha256).
+Use task_file(action=save, name, content) for exact UTF-8 final Dockerfiles, patches or small reports (up to 2 MB). It returns an immutable hash/path reference. Keep binaries and large assets in the workspace or explicit artifact storage and record their paths and provenance. Read saved content using task_file(action=read, name, sha256); internal content hashes do not require extra manual hashing.
 
-Before success, capture files actually used by the successful build, not a reconstructed approximation. Verify hashes against container workspace content when copying text. Record successful commands, test evidence and image IDs. gen-experience uses these facts and refuses to invent absent evidence.
+Before success, capture files actually used by the successful build, not a reconstructed approximation. Preserve exact workspace content when copying text. Record successful commands, test evidence and image IDs. gen-experience uses these facts and refuses to invent absent evidence.
 
 Record each final target's effective runtime base reference, known digest, family and libc in existing result/image evidence, resolving build-argument overrides and stage inheritance. Helper/builder identity is separate. These facts support schema 3 knowledge recipes under project/version/runtime-family; see [knowledge layout](knowledge-layout.md). They add no runtime state or gate, and do not automatically migrate existing knowledge.
 

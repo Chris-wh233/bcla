@@ -9,6 +9,8 @@ Use the current Codex conversation and model. Codex owns the agent loop. There i
 
 Read [the task protocol](../../docs/task-protocol.md) before creating or resuming a task. Tools come from this plugin's `bcla` MCP server. Use this plugin's sibling Skills.
 
+Apply [no-extra-checksums](../no-extra-checksums/SKILL.md) throughout task execution, file generation and result reporting.
+
 ## Enter or resume
 
 Activate task execution only when explicitly requested. Ordinary conversation may read and discuss logs without continuing builds.

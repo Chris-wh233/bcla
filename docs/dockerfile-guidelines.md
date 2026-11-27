@@ -8,7 +8,7 @@ For upstream downloads, package installs or context copies with no compatible Lo
 
 Make broader changes only when concrete compatibility, functionality or export constraints require them. Record the reason and verification in existing task decisions/build definitions; no new gate is needed. A major change need not trigger user approval unless it changes the requested version, features or deliverables. Preserve the authentic baseline even when the successful adaptation differs substantially.
 
-Do not introduce SHA-256 build steps or checksum sidecar files for local COPY artifacts. Use task-record hashes to identify accepted bytes when needed. This is separate from published verification of remote downloads and from real-consumer compatibility tests.
+Apply [no-extra-checksums](../skills/no-extra-checksums/SKILL.md) to local and downloaded inputs. Retain applicable upstream Dockerfile/user-required checks, not extra task-added verification.
 
 Before task success, compare the final Dockerfile against that baseline, remove trial-only commands and complete any intended formatting cleanup. Build and test using this exact final file and its actual arguments/inputs, then save it as accepted evidence. Later edits are not covered by an earlier build's success.
 
@@ -25,6 +25,6 @@ Choose exported artifact handling from its actual provenance, not its current ca
 
 Java exception: bundle a verified post-replacement distribution for local COPY/ADD, keeping normal extraction/runtime setup. Omit the original distribution and replacement inputs/scripts/steps; replacement history remains in task records and `gen-experience`.
 
-Use pinned versions/commits and verified download URLs. If the actual remote source cannot be reproduced without missing credentials, expired links or an unidentified asset, report the exact gap; do not silently relabel a download as a task-built artifact. Preserve remote verification already used, but a publisher checksum is not a mandatory prerequisite. Do not add SHA-256 checks, hash ARGs, manifests or verification-only stages for local COPY artifacts. Internal evidence hashes may still identify accepted bytes; they do not become build steps.
+Use pinned versions/commits and verified download URLs. If the actual remote source cannot be reproduced without missing credentials, expired links or an unidentified asset, report the exact gap; do not silently relabel a download as a task-built artifact. Internal evidence hashes do not become build steps.
 
 Only make export changes required for these provenance rules, flat context paths and actual build parameters. Static validation does not prove that a transformed Dockerfile has built successfully. Keep that distinction in the delivery response.

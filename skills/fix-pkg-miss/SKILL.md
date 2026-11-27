@@ -35,9 +35,9 @@ Record whether each accepted output was downloaded, installed as a package, buil
 
 A fetch timeout is not "no matching release". Apply the main Skill's one-shot direct retry before recording a network blocker. Do not silently skip a required source and build from source. A source archive is not a prebuilt distribution package.
 
-Validate candidate identity, version, format, architecture/libc, contents, provenance and real-consumer behavior. Verify published checksums/signatures when supplied; their absence alone is not a reason to reject. A locally computed hash identifies bytes, not publisher authentication.
+Validate candidate identity, version, format, architecture/libc, contents, provenance and real-consumer behavior. Follow [no-extra-checksums](../no-extra-checksums/SKILL.md); published hashes alone do not require extra verification.
 
-If a real integration fails because of the candidate, record its URL/version/hash and rejection evidence, then try another independent source. Do not keep repackaging or patching that candidate. An unrelated project failure does not reject a good resource.
+If a real integration fails because of the candidate, record its URL/version and rejection evidence, then try another independent source. Do not keep repackaging or patching that candidate. An unrelated project failure does not reject a good resource.
 
 Establish attribution from the failing command and inspected artifact: for example, wrong ELF architecture, missing required exports, or incompatible ABI. An unspecific link failure alone does not establish that the candidate is defective; first distinguish consumer configuration from resource incompatibility.
 

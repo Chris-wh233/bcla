@@ -23,6 +23,8 @@ Generate schema 3 image recipes under `<owner>/<repo>/<version-directory>/<varia
 
 Save only final successful facts: requested/resolved version, targets, nonsecret build environment and commands, consumed dependency provenance, exact final Dockerfiles, retained adaptations, immutable images and passing tests. Exclude trial steps, superseded patches, unused artifacts, regional proxies and ephemeral host/container identifiers.
 
+Apply [no-extra-checksums](../no-extra-checksums/SKILL.md) to recipe commands and reports. Keep required internal `files.sha256` metadata; do not turn it into build steps.
+
 For Java dependency replacements, record original/replacement Maven coordinates, sources, destination paths, actual preparation/repacking steps and successful consumer tests, not just the original distribution URL.
 
 Within each family recipe include only its assigned targets and relevant successful evidence, while preserving necessary cross-image build relationships. For each target save the exact accepted Dockerfile and runtime_base metadata. For source adaptation save adaptation.md and patches/loongarch.patch, excluding separately stored Dockerfiles and incidental generated files. For each actually source-built dependency, create one flat `dependencies/<name>-<version>` recipe inside that variant, with dependency references rather than nested directories. Do not claim one variant covers every target of a multi-family task.

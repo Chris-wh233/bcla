@@ -34,4 +34,4 @@ For non-system wheels, check in order:
 
 Match Python implementation, version, ABI, LoongArch platform and libc tags. Download an exact compatible wheel; avoid broad permanent extra indexes. Verify imports and the real consumer. For `python-build-standalone`, also check `https://github.com/loong64/python-build-standalone`. Search applicable general CI sources before upstream fallback or source construction.
 
-For all sources, verify published integrity metadata when available, but do not invent a mandatory publisher SHA-256 requirement. Record a local hash separately from publisher verification. Reject incompatible architecture artifacts; never silently substitute emulation or another project/version.
+For all sources, follow [no-extra-checksums](../../no-extra-checksums/SKILL.md) rather than adding verification because hashes are published. Reject incompatible architecture artifacts; never silently substitute emulation or another project/version.

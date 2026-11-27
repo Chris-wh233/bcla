@@ -236,7 +236,8 @@ class PackagingTests(unittest.TestCase):
             self.assertFalse((second / "remote").exists())
             self.assertFalse((second / "dist").exists())
             for relative in ("skills/fix-pkg-miss/scripts/scan_java_native.py",
-                             "skills/fix-pkg-miss/references/java-native.md"):
+                             "skills/fix-pkg-miss/references/java-native.md",
+                             "skills/no-extra-checksums/SKILL.md"):
                 self.assertEqual((second / relative).read_bytes(), (source / relative).read_bytes())
             manifest = json.loads((second / ".codex-plugin" / "plugin.json").read_text())
             self.assertEqual(manifest["name"], "bcla")
