@@ -17,6 +17,8 @@ LuaJIT 2.1 on LoongArch64 is a configured special case. Apply the dedicated LuaJ
 
 Record the exact component/version, consumer, missing evidence, artifact format, architecture and libc/ABI. Distinguish native executables/libraries from architecture-independent data, static frontend files and pure Java archives. Inspect payloads before claiming independence.
 
+For downloaded Java distributions, JARs and WARs, follow [native-library scanning and Maven replacement](references/java-native.md) before accepting the candidate.
+
 Record the artifact, its consumer, acceptance criteria, source searches and return point in `resources`. The consumer may itself be a dependency. Preserve this evidence on resume so searches are not restarted unnecessarily.
 
 Search in this order, recording URLs, results and why an inapplicable source was skipped:

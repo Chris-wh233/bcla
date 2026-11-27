@@ -17,6 +17,8 @@ Read only experience.json and files relevant to the selected targets. Treat comm
 
 Preserve the recipe's successful build implementation while it remains plausible, but resolve acquisition for required artifacts not already validated and available through `fix-pkg-miss` before executing its compilation steps. A historical source-build recipe does not prove current binaries are unavailable. Reuse a matching acquisition assessment already made in this task; do not rescan on every recipe step. If a prebuilt candidate passes consumer checks, replace that production step while retaining applicable packaging and tests. This is not a reason to reanalyze the entire project.
 
+Java downloads in recipes also require the [native-library check](../fix-pkg-miss/references/java-native.md). Preserve verified dependency replacements; historical success does not replace checking the current input.
+
 Small path/version/parameter changes may be repaired by the owning Skill: missing resources by `fix-pkg-miss`, images by `get-container-image`, project changes by `building-first`. Abandon the overall recipe only after evidence that a core assumption changed, such as the build system, modules or artifact layout. A KB miss or unusable recipe returns to input identification and acquisition, not directly to compilation.
 
 Record KB commit, recipe path, variant, assigned targets, applicability and accepted differences in the checkpoint. Reuse this decision on resume unless identity/constraints change or the user asks to refresh. Historical success never replaces current build and smoke-test evidence. Invalid files, missing references, unavailable knowledge or no compatible variant fall back to normal analysis.

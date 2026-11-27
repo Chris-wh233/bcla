@@ -23,6 +23,8 @@ Choose exported artifact handling from its actual provenance, not its current ca
 - Outputs already produced inside a retained Dockerfile stage remain stage-local builds/transfers. Upstream source-tree inputs can become pinned source downloads with the actual required patches applied inside that stage.
 - Small adapted upstream support files may retain a pristine local baseline plus an actually consumed patch/preparation rule. Locally authored scripts/configuration remain local. Preserve required licenses. This is not permission to bundle unused originals, alternate files or cached remote distributions.
 
+Java exception: bundle a verified post-replacement distribution for local COPY/ADD, keeping normal extraction/runtime setup. Omit the original distribution and replacement inputs/scripts/steps; replacement history remains in task records and `gen-experience`.
+
 Use pinned versions/commits and verified download URLs. If the actual remote source cannot be reproduced without missing credentials, expired links or an unidentified asset, report the exact gap; do not silently relabel a download as a task-built artifact. Preserve remote verification already used, but a publisher checksum is not a mandatory prerequisite. Do not add SHA-256 checks, hash ARGs, manifests or verification-only stages for local COPY artifacts. Internal evidence hashes may still identify accepted bytes; they do not become build steps.
 
 Only make export changes required for these provenance rules, flat context paths and actual build parameters. Static validation does not prove that a transformed Dockerfile has built successfully. Keep that distinction in the delivery response.

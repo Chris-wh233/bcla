@@ -23,6 +23,8 @@ Check `https://unofficial-builds.nodejs.org/download/release/` for the exact ver
 
 Check `https://maven.loongnix.cn/loongarch/maven/` for exact group/artifact/version/classifier. Inspect native payloads; ordinary JARs may be architecture independent. Also check the general release/CI sources before upstream Release fallback. Scope repository changes to the affected build or module, never global Maven/Gradle configuration. Tracked build-file edits use `building-first`.
 
+For downloaded distributions, JARs and WARs, follow the [native-library scan and replacement procedure](java-native.md).
+
 ## Python
 
 For non-system wheels, check in order:

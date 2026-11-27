@@ -35,6 +35,7 @@ Actual task provenance determines handling; size, filename and cache location do
 
 | Input actually needed by a Dockerfile | Placement |
 | --- | --- |
+| Java distribution with dependencies replaced during the task (exception to download rules below) | Bundle the verified final distribution and COPY/ADD locally; omit the original distribution and replacement inputs/scripts/steps. Replacement history stays in task records and experience. |
 | Artifact actually downloaded from authoritative upstream or configured fix-pkg-miss sources | Download inside the corresponding Dockerfile stage from the exact recorded source, even if the accepted task used local COPY. Do not bundle its cached copy. |
 | Compatible system package installed during the accepted build | Preserve the verified package-install route and required package setup. |
 | Artifact built separately during this task, including local CI or user-generated x86 frontend output | Bundle the accepted output and COPY locally, regardless of size or whether a different release is now available. Do not recreate its generation chain. |
